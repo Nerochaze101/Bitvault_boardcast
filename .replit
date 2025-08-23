@@ -28,3 +28,7 @@ args = "npm install node-telegram-bot-api node-cron dotenv express && node serve
 
 [workflows.workflow.metadata]
 outputType = "webview"
+
+[[ports]]
+localPort = 5000
+externalPort = 80
