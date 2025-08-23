@@ -22,12 +22,12 @@ class BitVaultBotServer {
         // Request logging middleware
         this.app.use((req, res, next) => {
             const startTime = Date.now();
-            
+
             res.on('finish', () => {
                 const responseTime = Date.now() - startTime;
                 logger.logRequest(req, res, responseTime);
             });
-            
+
             next();
         });
 
@@ -36,7 +36,7 @@ class BitVaultBotServer {
             res.header('Access-Control-Allow-Origin', '*');
             res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
             res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-            
+
             if (req.method === 'OPTIONS') {
                 res.sendStatus(200);
             } else {
@@ -47,7 +47,7 @@ class BitVaultBotServer {
         // Error handling middleware
         this.app.use((error, req, res, next) => {
             logger.error('Express error:', error.message);
-            
+
             res.status(500).json({
                 success: false,
                 error: 'Internal server error',
@@ -64,7 +64,7 @@ class BitVaultBotServer {
         this.app.get('/health', (req, res) => {
             const botStatus = getStatus();
             const schedulerStatus = getSchedulerStatus();
-            
+
             res.json({
                 success: true,
                 status: 'healthy',
@@ -79,7 +79,7 @@ class BitVaultBotServer {
         this.app.get('/status', (req, res) => {
             const botStatus = getStatus();
             const schedulerStatus = getSchedulerStatus();
-            
+
             res.json({
                 success: true,
                 data: {
@@ -100,7 +100,7 @@ class BitVaultBotServer {
         this.app.post('/broadcast', async (req, res) => {
             try {
                 const { message } = req.body;
-                
+
                 if (!message) {
                     return res.status(400).json({
                         success: false,
@@ -110,16 +110,16 @@ class BitVaultBotServer {
                 }
 
                 const result = await broadcastUpdate(message);
-                
+
                 res.json({
                     success: true,
                     data: result,
                     timestamp: new Date().toISOString()
                 });
-                
+
             } catch (error) {
                 logger.error('Broadcast API error:', error.message);
-                
+
                 res.status(500).json({
                     success: false,
                     error: error.message,
@@ -132,16 +132,16 @@ class BitVaultBotServer {
         this.app.post('/daily-summary', async (req, res) => {
             try {
                 const result = await sendDailyMarketSummary();
-                
+
                 res.json({
                     success: true,
                     data: result,
                     timestamp: new Date().toISOString()
                 });
-                
+
             } catch (error) {
                 logger.error('Daily summary API error:', error.message);
-                
+
                 res.status(500).json({
                     success: false,
                     error: error.message,
@@ -154,7 +154,7 @@ class BitVaultBotServer {
         this.app.post('/schedule', async (req, res) => {
             try {
                 const { name, cronExpression, message, options = {} } = req.body;
-                
+
                 if (!name || !cronExpression || !message) {
                     return res.status(400).json({
                         success: false,
@@ -164,16 +164,16 @@ class BitVaultBotServer {
                 }
 
                 scheduleCustomMessage(name, cronExpression, message, options);
-                
+
                 res.json({
                     success: true,
                     data: { name, cronExpression, scheduled: true },
                     timestamp: new Date().toISOString()
                 });
-                
+
             } catch (error) {
                 logger.error('Schedule API error:', error.message);
-                
+
                 res.status(400).json({
                     success: false,
                     error: error.message,
@@ -187,7 +187,7 @@ class BitVaultBotServer {
             try {
                 const { name } = req.params;
                 const stopped = stopJob(name);
-                
+
                 if (stopped) {
                     res.json({
                         success: true,
@@ -201,10 +201,10 @@ class BitVaultBotServer {
                         timestamp: new Date().toISOString()
                     });
                 }
-                
+
             } catch (error) {
                 logger.error('Stop schedule API error:', error.message);
-                
+
                 res.status(500).json({
                     success: false,
                     error: error.message,
@@ -218,16 +218,16 @@ class BitVaultBotServer {
             try {
                 const lines = parseInt(req.query.lines) || 100;
                 const logs = logger.getRecentLogs(lines);
-                
+
                 res.json({
                     success: true,
                     data: { logs, count: logs.length },
                     timestamp: new Date().toISOString()
                 });
-                
+
             } catch (error) {
                 logger.error('Logs API error:', error.message);
-                
+
                 res.status(500).json({
                     success: false,
                     error: error.message,
@@ -256,7 +256,7 @@ class BitVaultBotServer {
                     message: "📅 *Weekly BitVault Pro Summary*\n\n💰 *Total Returns*: Exceeding expectations\n🔄 *Reinvestments*: Automatically processed\n📊 *Portfolio Growth*: Steady upward trend\n🎯 *Success Rate*: 98.5% satisfaction\n\n*Join thousands of successful investors!* 🌟"
                 }
             ];
-            
+
             res.json({
                 success: true,
                 data: { samples },
@@ -288,8 +288,8 @@ class BitVaultBotServer {
                 this.setupRoutes();
 
                 // Start HTTP server
-                this.server = this.app.listen(config.port, config.host, () => {
-                    logger.info(`BitVault Bot Server started on ${config.host}:${config.port}`);
+                this.server = this.app.listen(process.env.PORT || 5000, '0.0.0.0', () => {
+                    logger.info(`BitVault Bot Server started on http://0.0.0.0:${process.env.PORT || 5000}`);
                 });
 
                 this.server.on('error', (error) => {
@@ -300,7 +300,7 @@ class BitVaultBotServer {
 
             this.isRunning = true;
             logger.info('BitVault Telegram Bot service started successfully');
-            
+
             return true;
         } catch (error) {
             logger.error('Failed to start server:', error.message);
@@ -320,7 +320,7 @@ class BitVaultBotServer {
 
             this.isRunning = false;
             logger.info('BitVault Bot Server stopped');
-            
+
         } catch (error) {
             logger.error('Error stopping server:', error.message);
             throw error;
