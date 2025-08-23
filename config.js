@@ -13,7 +13,7 @@ const config = {
     channelId: process.env.CHANNEL_ID,
     
     // Scheduler Configuration
-    dailyUpdateTime: process.env.DAILY_UPDATE_TIME || '0 10 * * *', // 10:00 AM daily
+    dailyUpdateTime: process.env.DAILY_UPDATE_TIME || '0 9 * * *', // 9:00 AM daily
     timezone: process.env.TIMEZONE || 'UTC',
     
     // API Configuration
