@@ -25,11 +25,6 @@ author = "agent"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "npm install node-telegram-bot-api node-cron dotenv express && node server.js"
-waitForPort = 3000
 
 [workflows.workflow.metadata]
 outputType = "webview"
-
-[[ports]]
-localPort = 3000
-externalPort = 80
