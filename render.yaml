@@ -11,8 +11,10 @@ services:
         value: production
       - key: BOT_TOKEN
         sync: false
+        # REQUIRED: Set this to your Telegram bot token in Render dashboard
       - key: CHANNEL_ID
         sync: false
+        # REQUIRED: Set this to your channel ID (e.g., @your_channel or -1001234567890)
       - key: DAILY_UPDATE_TIME
         value: "0 10 * * *"
       - key: TIMEZONE

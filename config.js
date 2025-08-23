@@ -36,12 +36,19 @@ const config = {
  * Validate required configuration
  */
 function validateConfig() {
+    // Log all available environment variables (without values for security)
+    const envKeys = Object.keys(process.env).filter(key => 
+        key.startsWith('BOT_') || key.startsWith('CHANNEL_') || key === 'PORT' || key === 'NODE_ENV'
+    );
+    logger.info('Available environment variables:', envKeys);
+    
     const required = ['botToken', 'channelId'];
     const missing = required.filter(key => !config[key]);
     
     if (missing.length > 0) {
-        const error = `Missing required environment variables: ${missing.join(', ')}`;
+        const error = `Missing required environment variables: ${missing.join(', ')}. Please set these in your deployment platform's environment variables dashboard.`;
         logger.error(error);
+        logger.error('Make sure BOT_TOKEN and CHANNEL_ID are set in Render\'s Environment Variables panel.');
         throw new Error(error);
     }
     
