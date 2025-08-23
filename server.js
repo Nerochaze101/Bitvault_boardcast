@@ -22,12 +22,10 @@ class BitVaultBotServer {
         // Request logging middleware
         this.app.use((req, res, next) => {
             const startTime = Date.now();
-
             res.on('finish', () => {
                 const responseTime = Date.now() - startTime;
                 logger.logRequest(req, res, responseTime);
             });
-
             next();
         });
 
@@ -42,17 +40,6 @@ class BitVaultBotServer {
             } else {
                 next();
             }
-        });
-
-        // Error handling middleware
-        this.app.use((error, req, res, next) => {
-            logger.error('Express error:', error.message);
-
-            res.status(500).json({
-                success: false,
-                error: 'Internal server error',
-                timestamp: new Date().toISOString()
-            });
         });
     }
 
@@ -119,7 +106,6 @@ class BitVaultBotServer {
 
             } catch (error) {
                 logger.error('Broadcast API error:', error.message);
-
                 res.status(500).json({
                     success: false,
                     error: error.message,
@@ -141,7 +127,6 @@ class BitVaultBotServer {
 
             } catch (error) {
                 logger.error('Daily summary API error:', error.message);
-
                 res.status(500).json({
                     success: false,
                     error: error.message,
@@ -173,7 +158,6 @@ class BitVaultBotServer {
 
             } catch (error) {
                 logger.error('Schedule API error:', error.message);
-
                 res.status(400).json({
                     success: false,
                     error: error.message,
@@ -204,7 +188,6 @@ class BitVaultBotServer {
 
             } catch (error) {
                 logger.error('Stop schedule API error:', error.message);
-
                 res.status(500).json({
                     success: false,
                     error: error.message,
@@ -227,7 +210,6 @@ class BitVaultBotServer {
 
             } catch (error) {
                 logger.error('Logs API error:', error.message);
-
                 res.status(500).json({
                     success: false,
                     error: error.message,
@@ -263,6 +245,16 @@ class BitVaultBotServer {
                 timestamp: new Date().toISOString()
             });
         });
+
+        // Error handling middleware (last)
+        this.app.use((err, req, res, next) => {
+            logger.error('Express error:', err.stack || err.message);
+            res.status(500).json({
+                success: false,
+                error: 'Internal server error',
+                timestamp: new Date().toISOString()
+            });
+        });
     }
 
     /**
@@ -275,7 +267,14 @@ class BitVaultBotServer {
             config.log();
 
             // Initialize bot
-            await initialize();
+            try {
+                await initialize();
+                logger.info("Telegram bot initialized successfully");
+            } catch (err) {
+                logger.error(`Bot initialization failed: ${err.message}`);
+                if (err.stack) logger.error(err.stack);
+                throw err;
+            }
 
             // Start scheduler if enabled
             if (config.enableScheduler) {
@@ -304,6 +303,7 @@ class BitVaultBotServer {
             return true;
         } catch (error) {
             logger.error('Failed to start server:', error.message);
+            if (error.stack) logger.error(error.stack);
             throw error;
         }
     }
@@ -323,6 +323,7 @@ class BitVaultBotServer {
 
         } catch (error) {
             logger.error('Error stopping server:', error.message);
+            if (error.stack) logger.error(error.stack);
             throw error;
         }
     }
@@ -346,7 +347,7 @@ process.on('SIGTERM', async () => {
 
 // Handle uncaught exceptions
 process.on('uncaughtException', (error) => {
-    logger.error('Uncaught exception:', error.message);
+    logger.error('Uncaught exception:', error.stack || error.message);
     process.exit(1);
 });
 
@@ -359,6 +360,7 @@ process.on('unhandledRejection', (reason, promise) => {
 if (require.main === module) {
     server.start().catch((error) => {
         logger.error('Failed to start application:', error.message);
+        if (error.stack) logger.error(error.stack);
         process.exit(1);
     });
 }
