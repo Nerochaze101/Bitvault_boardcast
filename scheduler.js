@@ -175,45 +175,11 @@ class TelegramScheduler {
     }
 
     /**
-     * Add sample scheduled messages for BitVault Pro
+     * Add sample scheduled messages for BitVault Pro (disabled for single daily broadcast)
      */
     setupBitVaultSchedules() {
-        // Weekly portfolio summary (Mondays at 10 AM)
-        this.scheduleCustomMessage(
-            'weeklyPortfolio',
-            '0 10 * * 1',
-            `📊 *Weekly BitVault Pro Portfolio Summary*
-
-💰 *Total Assets Under Management*: Growing Strong
-📈 *Weekly Performance*: Exceeding Expectations
-🔒 *Security Status*: All Systems Green
-
-🚀 *This Week's Highlights*:
-✅ Automated profit distributions completed
-✅ New investment opportunities identified
-✅ Portfolio rebalancing optimized
-
-*Ready to grow your Bitcoin portfolio?*
-Join BitVault Pro today! 💎`
-        );
-
-        // Profit distribution notification (Every 6 hours)
-        this.scheduleCustomMessage(
-            'profitDistribution',
-            '0 */6 * * *',
-            `💰 *Automated Profit Distribution Complete!*
-
-🎯 *BitVault Pro Update*:
-✅ Latest profits distributed to all active investments
-📊 Returns calculated and credited to your account
-🔄 Compound interest automatically applied
-
-*Your Bitcoin is working for you 24/7!* 🚀
-
-Check your dashboard for updated balances 📈`
-        );
-
-        logger.info('BitVault Pro scheduled messages configured');
+        // All additional scheduled messages disabled to ensure only one daily broadcast
+        logger.info('Additional scheduled messages disabled - only daily market summary will broadcast');
     }
 }
 
