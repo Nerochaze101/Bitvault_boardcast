@@ -1,32 +1,37 @@
-
 services:
-  - type: web
-    name: bitvault-telegram-bot
-    env: node
-    plan: starter
-    buildCommand: npm install
-    startCommand: npm start
-    envVars:
-      - key: NODE_ENV
-        value: production
-      - key: BOT_TOKEN
-        sync: false
-        # REQUIRED: Set this to your Telegram bot token in Render dashboard
-      - key: CHANNEL_ID
-        sync: false
-        # REQUIRED: Set this to your channel ID (e.g., @your_channel or -1001234567890)
-      - key: DAILY_UPDATE_TIME
-        value: "0 10 * * *"
-      - key: TIMEZONE
-        value: UTC
-      - key: ENABLE_SCHEDULER
-        value: "true"
-      - key: ENABLE_API
-        value: "true"
-      - key: LOG_LEVEL
-        value: info
-      - key: RETRY_ATTEMPTS
-        value: "3"
-      - key: RETRY_DELAY
-        value: "2000"
-    healthCheckPath: /health
+- type: web
+  name: Bitvault_boardcastBot
+  env: node
+  plan: free
+  buildCommand: npm install
+  startCommand: npm start
+  envVars:
+    # 🔑 Secrets: set these manually in Render Dashboard
+    - key: BOT_TOKEN
+      sync: false
+    - key: CHANNEL_ID
+      sync: false
+
+    # Scheduler config
+    - key: DAILY_UPDATE_TIME
+      value: "0 10 * * *"
+    - key: TIMEZONE
+      value: UTC
+    - key: ENABLE_SCHEDULER
+      value: true
+
+    # Server config (PORT is auto-injected by Render ⚠️ don’t hardcode it)
+    - key: HOST
+      value: 0.0.0.0
+    - key: ENABLE_API
+      value: true
+
+    # Logging
+    - key: LOG_LEVEL
+      value: info
+
+    # Bot behavior
+    - key: RETRY_ATTEMPTS
+      value: "3"
+    - key: RETRY_DELAY
+      value: "2000"
