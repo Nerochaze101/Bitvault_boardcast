@@ -190,7 +190,8 @@ class BitVaultTelegramBot {
         const growthFactor = 1 + (dayOfYear * 0.001); // Small daily growth
         const progressiveMarketCap = Math.round((marketCap || baseMarketCap) * growthFactor);
         
-        const messageType = dayOfYear % 12; // 12 different message styles
+        // Use current timestamp to rotate through different message styles each broadcast
+        const messageType = Math.floor(Date.now() / 1000) % 12; // 12 different rotating styles
         
         // Animation elements and effects
         const sparkles = '✨'.repeat(3);
