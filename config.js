@@ -17,7 +17,7 @@ const config = {
     timezone: process.env.TIMEZONE || 'UTC',
     
     // API Configuration
-    port: parseInt(process.env.PORT) || 5000,
+    port: parseInt(process.env.PORT) || 3000,
     host: process.env.HOST || '0.0.0.0',
     
     // Logging Configuration
