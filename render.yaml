@@ -1,0 +1,30 @@
+
+services:
+  - type: web
+    name: bitvault-telegram-bot
+    env: node
+    plan: starter
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: BOT_TOKEN
+        sync: false
+      - key: CHANNEL_ID
+        sync: false
+      - key: DAILY_UPDATE_TIME
+        value: "0 10 * * *"
+      - key: TIMEZONE
+        value: UTC
+      - key: ENABLE_SCHEDULER
+        value: "true"
+      - key: ENABLE_API
+        value: "true"
+      - key: LOG_LEVEL
+        value: info
+      - key: RETRY_ATTEMPTS
+        value: "3"
+      - key: RETRY_DELAY
+        value: "2000"
+    healthCheckPath: /health
