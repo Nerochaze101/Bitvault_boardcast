@@ -126,23 +126,29 @@ class BitVaultTelegramBot {
             
             // Handle specific Telegram API errors
             if (error.response && error.response.body) {
-                const errorData = JSON.parse(error.response.body);
-                const errorCode = errorData.error_code;
-                const errorDescription = errorData.description;
-                
-                switch (errorCode) {
-                    case 400:
-                        throw new Error(`Bad Request: ${errorDescription}`);
-                    case 403:
-                        throw new Error(`Forbidden: Bot lacks permission. ${errorDescription}`);
-                    case 429:
-                        throw new Error(`Rate Limited: Too many requests. ${errorDescription}`);
-                    case 502:
-                    case 503:
-                    case 504:
-                        throw new Error(`Telegram API temporarily unavailable: ${errorDescription}`);
-                    default:
-                        throw new Error(`Telegram API Error (${errorCode}): ${errorDescription}`);
+                try {
+                    const errorData = typeof error.response.body === 'string' 
+                        ? JSON.parse(error.response.body) 
+                        : error.response.body;
+                    const errorCode = errorData.error_code;
+                    const errorDescription = errorData.description;
+                    
+                    switch (errorCode) {
+                        case 400:
+                            throw new Error(`Bad Request: ${errorDescription}`);
+                        case 403:
+                            throw new Error(`Forbidden: Bot lacks permission. ${errorDescription}`);
+                        case 429:
+                            throw new Error(`Rate Limited: Too many requests. ${errorDescription}`);
+                        case 502:
+                        case 503:
+                        case 504:
+                            throw new Error(`Telegram API temporarily unavailable: ${errorDescription}`);
+                        default:
+                            throw new Error(`Telegram API Error (${errorCode}): ${errorDescription}`);
+                    }
+                } catch (parseError) {
+                    logger.warn('Failed to parse Telegram API error response:', parseError.message);
                 }
             }
             
