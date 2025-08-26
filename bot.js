@@ -23,7 +23,12 @@ class BitVaultTelegramBot {
                 throw new Error('CHANNEL_ID is required');
             }
 
-            this.bot = new TelegramBot(config.botToken, { polling: false });
+            this.bot = new TelegramBot(config.botToken, { polling: config.enableCommands });
+            
+            // Set up command handlers if enabled
+            if (config.enableCommands) {
+                this.setupCommandHandlers();
+            }
             
             // Test the bot connection
             const botInfo = await this.bot.getMe();
@@ -43,6 +48,86 @@ class BitVaultTelegramBot {
             logger.error('Failed to initialize bot:', error.message);
             throw error;
         }
+    }
+
+    /**
+     * Setup command handlers for the bot
+     */
+    setupCommandHandlers() {
+        // Command to trigger daily market summary
+        this.bot.onText(/\/broadcast_daily/, async (msg) => {
+            const chatId = msg.chat.id;
+            const userId = msg.from.id;
+            const username = msg.from.username || msg.from.first_name;
+            
+            logger.info(`Broadcast daily command received from user: ${username} (${userId})`);
+            
+            try {
+                // Send "thinking" message
+                await this.bot.sendMessage(chatId, '🔄 Preparing daily market summary...');
+                
+                // Send the daily market summary
+                const result = await this.sendDailyMarketSummary();
+                
+                // Confirm success to the user
+                await this.bot.sendMessage(chatId, `✅ Daily market summary sent successfully!\n\nMessage ID: ${result.messageId}\nTime: ${result.timestamp}`);
+                
+            } catch (error) {
+                logger.error(`Failed to send daily summary via command: ${error.message}`);
+                await this.bot.sendMessage(chatId, `❌ Failed to send broadcast: ${error.message}`);
+            }
+        });
+
+        // Command to send custom broadcast message
+        this.bot.onText(/\/broadcast (.+)/, async (msg, match) => {
+            const chatId = msg.chat.id;
+            const userId = msg.from.id;
+            const username = msg.from.username || msg.from.first_name;
+            const customMessage = match[1];
+            
+            logger.info(`Custom broadcast command received from user: ${username} (${userId})`);
+            
+            try {
+                // Send "thinking" message
+                await this.bot.sendMessage(chatId, '🔄 Sending custom broadcast...');
+                
+                // Send the custom message
+                const result = await this.broadcastUpdate(customMessage);
+                
+                // Confirm success to the user
+                await this.bot.sendMessage(chatId, `✅ Custom broadcast sent successfully!\n\nMessage ID: ${result.messageId}\nTime: ${result.timestamp}`);
+                
+            } catch (error) {
+                logger.error(`Failed to send custom broadcast via command: ${error.message}`);
+                await this.bot.sendMessage(chatId, `❌ Failed to send broadcast: ${error.message}`);
+            }
+        });
+
+        // Help command
+        this.bot.onText(/\/start|\/help/, async (msg) => {
+            const chatId = msg.chat.id;
+            const helpMessage = `🤖 *BitVault Pro Bot Commands*
+
+Available commands:
+• \`/broadcast_daily\` - Send daily market summary
+• \`/broadcast <message>\` - Send custom broadcast message
+• \`/help\` - Show this help message
+
+*Usage Examples:*
+• \`/broadcast_daily\`
+• \`/broadcast 🚀 Special announcement: New feature launched!\`
+
+Send me any of these commands and I'll broadcast to the channel!`;
+
+            await this.bot.sendMessage(chatId, helpMessage, { parse_mode: 'Markdown' });
+        });
+
+        // Handle any errors from polling
+        this.bot.on('polling_error', (error) => {
+            logger.error('Telegram polling error:', error.message);
+        });
+
+        logger.info('Command handlers set up successfully');
     }
 
     /**

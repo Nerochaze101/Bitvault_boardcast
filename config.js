@@ -29,7 +29,8 @@ const config = {
     
     // Feature Flags
     enableScheduler: process.env.ENABLE_SCHEDULER !== 'false',
-    enableApi: process.env.ENABLE_API !== 'false'
+    enableApi: process.env.ENABLE_API !== 'false',
+    enableCommands: process.env.ENABLE_COMMANDS !== 'false'
 };
 
 /**
