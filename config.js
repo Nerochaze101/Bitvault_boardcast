@@ -32,8 +32,8 @@ const config = {
     enableApi: process.env.ENABLE_API !== 'false',
     enableCommands: process.env.ENABLE_COMMANDS !== 'false',
     
-    // Security - Authorized user ID (your Telegram user ID)
-    authorizedUserId: process.env.AUTHORIZED_USER_ID
+    // Security - Authorized user ID (using CHAT_ID)
+    authorizedUserId: process.env.CHAT_ID
 };
 
 /**

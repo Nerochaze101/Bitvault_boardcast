@@ -57,7 +57,7 @@ class BitVaultTelegramBot {
         // Helper function to check if user is authorized
         const isAuthorized = (userId) => {
             if (!config.authorizedUserId) {
-                logger.warn('AUTHORIZED_USER_ID not set - allowing all users');
+                logger.warn('CHAT_ID not set - allowing all users');
                 return true;
             }
             return userId.toString() === config.authorizedUserId.toString();
