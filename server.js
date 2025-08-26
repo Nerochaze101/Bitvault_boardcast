@@ -47,6 +47,31 @@ class BitVaultBotServer {
      * Setup API routes
      */
     setupRoutes() {
+        // Root endpoint - BitVault Pro API info
+        this.app.get('/', (req, res) => {
+            const botStatus = getStatus();
+            res.json({
+                success: true,
+                service: 'BitVault Pro Telegram Bot API',
+                version: '1.0.0',
+                status: 'operational',
+                endpoints: {
+                    health: '/health',
+                    status: '/status',
+                    broadcast: 'POST /broadcast',
+                    dailySummary: 'POST /daily-summary',
+                    schedule: 'POST /schedule',
+                    logs: '/logs',
+                    samples: '/samples'
+                },
+                bot: {
+                    connected: botStatus.isConnected,
+                    username: botStatus.username
+                },
+                timestamp: new Date().toISOString()
+            });
+        });
+
         // Health check endpoint
         this.app.get('/health', (req, res) => {
             const botStatus = getStatus();

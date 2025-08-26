@@ -22,12 +22,13 @@ args = "BitVault Bot Server"
 name = "BitVault Bot Server"
 author = "agent"
 
+[workflows.workflow.metadata]
+outputType = "console"
+
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "npm install node-telegram-bot-api node-cron dotenv express && node server.js"
-
-[workflows.workflow.metadata]
-outputType = "webview"
+args = "npm start"
+waitForPort = 5000
 
 [[ports]]
 localPort = 5000
