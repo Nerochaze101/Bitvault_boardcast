@@ -54,6 +54,15 @@ class BitVaultTelegramBot {
      * Setup command handlers for the bot
      */
     setupCommandHandlers() {
+        // Helper function to check if user is authorized
+        const isAuthorized = (userId) => {
+            if (!config.authorizedUserId) {
+                logger.warn('AUTHORIZED_USER_ID not set - allowing all users');
+                return true;
+            }
+            return userId.toString() === config.authorizedUserId.toString();
+        };
+
         // Command to trigger daily market summary
         this.bot.onText(/\/broadcast_daily/, async (msg) => {
             const chatId = msg.chat.id;
@@ -61,6 +70,13 @@ class BitVaultTelegramBot {
             const username = msg.from.username || msg.from.first_name;
             
             logger.info(`Broadcast daily command received from user: ${username} (${userId})`);
+            
+            // Check authorization
+            if (!isAuthorized(userId)) {
+                logger.warn(`Unauthorized access attempt from user: ${username} (${userId})`);
+                await this.bot.sendMessage(chatId, '❌ You are not authorized to use this bot.');
+                return;
+            }
             
             try {
                 // Send "thinking" message
@@ -87,6 +103,13 @@ class BitVaultTelegramBot {
             
             logger.info(`Custom broadcast command received from user: ${username} (${userId})`);
             
+            // Check authorization
+            if (!isAuthorized(userId)) {
+                logger.warn(`Unauthorized access attempt from user: ${username} (${userId})`);
+                await this.bot.sendMessage(chatId, '❌ You are not authorized to use this bot.');
+                return;
+            }
+            
             try {
                 // Send "thinking" message
                 await this.bot.sendMessage(chatId, '🔄 Sending custom broadcast...');
@@ -106,7 +129,26 @@ class BitVaultTelegramBot {
         // Help command
         this.bot.onText(/\/start|\/help/, async (msg) => {
             const chatId = msg.chat.id;
+            const userId = msg.from.id;
+            const username = msg.from.username || msg.from.first_name;
+            
+            logger.info(`Help/Start command from user: ${username} (${userId})`);
+            
+            if (!isAuthorized(userId)) {
+                const unauthorizedMessage = `🤖 *BitVault Pro Bot*
+
+❌ You are not authorized to use this bot.
+
+Your User ID: \`${userId}\`
+Contact the bot owner to get access.`;
+                await this.bot.sendMessage(chatId, unauthorizedMessage, { parse_mode: 'Markdown' });
+                return;
+            }
+            
             const helpMessage = `🤖 *BitVault Pro Bot Commands*
+
+✅ You are authorized to use this bot!
+Your User ID: \`${userId}\`
 
 Available commands:
 • \`/broadcast_daily\` - Send daily market summary
