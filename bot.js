@@ -204,6 +204,9 @@ Send me any of these commands and I'll broadcast to the channel!`;
      */
     async sendMessageWithRetry(message, options = {}, attempt = 1) {
         try {
+            // Log the full message being sent for debugging
+            logger.info(`Sending message (length: ${message.length}):`, message.substring(0, 200) + (message.length > 200 ? '...' : ''));
+            
             const result = await this.bot.sendMessage(config.channelId, message, {
                 parse_mode: 'Markdown',
                 disable_web_page_preview: true,
@@ -237,9 +240,13 @@ Send me any of these commands and I'll broadcast to the channel!`;
             throw new Error('Message must be a non-empty string');
         }
 
+        // Clean and preserve the message formatting
+        const cleanMessage = message.trim();
+        
         try {
-            logger.info('Broadcasting update message...');
-            const result = await this.sendMessageWithRetry(message);
+            logger.info(`Broadcasting update message (${cleanMessage.length} characters)...`);
+            logger.debug('Full message content:', cleanMessage);
+            const result = await this.sendMessageWithRetry(cleanMessage);
             
             logger.info('Broadcast successful');
             return {
