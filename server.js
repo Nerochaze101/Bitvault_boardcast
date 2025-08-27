@@ -447,9 +447,9 @@ class BitVaultBotServer {
      */
     async sendImageWithCaption(imagePath, caption = '') {
         try {
-            const { bot } = require('./bot');
+            const botModule = require('./bot');
             
-            const result = await bot.sendPhoto(config.channelId, imagePath, {
+            const result = await botModule.bot.bot.sendPhoto(config.channelId, imagePath, {
                 caption: caption,
                 parse_mode: 'Markdown'
             });
