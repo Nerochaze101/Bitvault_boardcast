@@ -1,4 +1,7 @@
 const express = require('express');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 const { bot, broadcastUpdate, sendDailyMarketSummary, initialize, getStatus } = require('./bot');
 const { start: startScheduler, getStatus: getSchedulerStatus, scheduleCustomMessage, stopJob } = require('./scheduler');
 const config = require('./config');
@@ -19,6 +22,33 @@ class BitVaultBotServer {
         this.app.use(express.json({ limit: '10mb' }));
         this.app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+        // Setup multer for image uploads
+        const storage = multer.diskStorage({
+            destination: (req, file, cb) => {
+                const uploadDir = './uploads';
+                if (!fs.existsSync(uploadDir)) {
+                    fs.mkdirSync(uploadDir, { recursive: true });
+                }
+                cb(null, uploadDir);
+            },
+            filename: (req, file, cb) => {
+                const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+                cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+            }
+        });
+
+        this.upload = multer({ 
+            storage: storage,
+            limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+            fileFilter: (req, file, cb) => {
+                if (file.mimetype.startsWith('image/')) {
+                    cb(null, true);
+                } else {
+                    cb(new Error('Only image files are allowed!'), false);
+                }
+            }
+        });
+
         // Request logging middleware
         this.app.use((req, res, next) => {
             const startTime = Date.now();
@@ -29,11 +59,29 @@ class BitVaultBotServer {
             next();
         });
 
+        // Authorization middleware for protected routes
+        this.authMiddleware = (req, res, next) => {
+            const authHeader = req.headers.authorization;
+            const userIdFromHeader = req.headers['x-user-id'];
+            
+            // Check if user ID is provided and matches authorized user
+            if (!userIdFromHeader || userIdFromHeader !== config.authorizedUserId) {
+                logger.warn(`Unauthorized access attempt from user ID: ${userIdFromHeader || 'not provided'}`);
+                return res.status(403).json({
+                    success: false,
+                    error: 'Access denied. Only authorized user can perform this action.',
+                    timestamp: new Date().toISOString()
+                });
+            }
+            
+            next();
+        };
+
         // CORS middleware
         this.app.use((req, res, next) => {
             res.header('Access-Control-Allow-Origin', '*');
             res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-            res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+            res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, X-User-ID');
 
             if (req.method === 'OPTIONS') {
                 res.sendStatus(200);
@@ -58,11 +106,16 @@ class BitVaultBotServer {
                 endpoints: {
                     health: '/health',
                     status: '/status',
-                    broadcast: 'POST /broadcast',
-                    dailySummary: 'POST /daily-summary',
-                    schedule: 'POST /schedule',
+                    broadcast: 'POST /broadcast (protected)',
+                    customBroadcast: 'POST /custom-broadcast (protected, supports image upload)',
+                    dailySummary: 'POST /daily-summary (protected)',
+                    schedule: 'POST /schedule (protected)',
                     logs: '/logs',
                     samples: '/samples'
+                },
+                security: {
+                    protectedEndpoints: 'Require X-User-ID header with authorized user ID',
+                    authorizedUserId: config.authorizedUserId
                 },
                 bot: {
                     connected: botStatus.isConnected,
@@ -108,8 +161,8 @@ class BitVaultBotServer {
             });
         });
 
-        // Broadcast message endpoint
-        this.app.post('/broadcast', async (req, res) => {
+        // Broadcast message endpoint (protected)
+        this.app.post('/broadcast', this.authMiddleware, async (req, res) => {
             try {
                 const { message } = req.body;
 
@@ -139,8 +192,8 @@ class BitVaultBotServer {
             }
         });
 
-        // Send daily market summary endpoint
-        this.app.post('/daily-summary', async (req, res) => {
+        // Send daily market summary endpoint (protected)
+        this.app.post('/daily-summary', this.authMiddleware, async (req, res) => {
             try {
                 const result = await sendDailyMarketSummary();
 
@@ -160,8 +213,8 @@ class BitVaultBotServer {
             }
         });
 
-        // Schedule custom message endpoint
-        this.app.post('/schedule', async (req, res) => {
+        // Schedule custom message endpoint (protected)
+        this.app.post('/schedule', this.authMiddleware, async (req, res) => {
             try {
                 const { name, cronExpression, message, options = {} } = req.body;
 
@@ -191,8 +244,61 @@ class BitVaultBotServer {
             }
         });
 
+        // Custom broadcast with image endpoint (protected)
+        this.app.post('/custom-broadcast', this.authMiddleware, this.upload.single('image'), async (req, res) => {
+            try {
+                const { message, caption } = req.body;
+                const imageFile = req.file;
+
+                if (!message && !imageFile) {
+                    return res.status(400).json({
+                        success: false,
+                        error: 'Either message or image is required',
+                        timestamp: new Date().toISOString()
+                    });
+                }
+
+                let result;
+                if (imageFile && message) {
+                    // Send image with caption
+                    result = await this.sendImageWithCaption(imageFile.path, message);
+                } else if (imageFile) {
+                    // Send image only with optional caption
+                    result = await this.sendImageWithCaption(imageFile.path, caption || '');
+                } else {
+                    // Send text message only
+                    result = await broadcastUpdate(message);
+                }
+
+                // Clean up uploaded file
+                if (imageFile && fs.existsSync(imageFile.path)) {
+                    fs.unlinkSync(imageFile.path);
+                }
+
+                res.json({
+                    success: true,
+                    data: result,
+                    timestamp: new Date().toISOString()
+                });
+
+            } catch (error) {
+                logger.error('Custom broadcast API error:', error.message);
+                
+                // Clean up uploaded file on error
+                if (req.file && fs.existsSync(req.file.path)) {
+                    fs.unlinkSync(req.file.path);
+                }
+                
+                res.status(500).json({
+                    success: false,
+                    error: error.message,
+                    timestamp: new Date().toISOString()
+                });
+            }
+        });
+
         // Stop scheduled job endpoint
-        this.app.delete('/schedule/:name', async (req, res) => {
+        this.app.delete('/schedule/:name', this.authMiddleware, async (req, res) => {
             try {
                 const { name } = req.params;
                 const stopped = stopJob(name);
@@ -330,6 +436,30 @@ class BitVaultBotServer {
             logger.error('Failed to start server:', error.message);
             if (error.stack) logger.error(error.stack);
             throw error;
+        }
+    }
+
+    /**
+     * Send image with caption to channel
+     */
+    async sendImageWithCaption(imagePath, caption = '') {
+        try {
+            const { bot } = require('./bot');
+            
+            const result = await bot.sendPhoto(config.channelId, imagePath, {
+                caption: caption,
+                parse_mode: 'Markdown'
+            });
+            
+            logger.info(`Image sent successfully to channel (message_id: ${result.message_id})`);
+            return {
+                success: true,
+                messageId: result.message_id,
+                timestamp: new Date().toISOString()
+            };
+        } catch (error) {
+            logger.error('Failed to send image:', error.message);
+            throw new Error(`Failed to send image: ${error.message}`);
         }
     }
 

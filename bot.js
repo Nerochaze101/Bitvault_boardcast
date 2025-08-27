@@ -23,12 +23,11 @@ class BitVaultTelegramBot {
                 throw new Error('CHANNEL_ID is required');
             }
 
-            this.bot = new TelegramBot(config.botToken, { polling: config.enableCommands });
+            // Disable polling to prevent conflicts in production environment
+            this.bot = new TelegramBot(config.botToken, { polling: false });
             
-            // Set up command handlers if enabled
-            if (config.enableCommands) {
-                this.setupCommandHandlers();
-            }
+            // Commands disabled in production to prevent conflicts
+            // this.setupCommandHandlers();
             
             // Test the bot connection
             const botInfo = await this.bot.getMe();
