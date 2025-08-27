@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BitVault Pro Bot Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+        }
+
+        .card h3 {
+            color: #4a5568;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .emoji {
+            font-size: 1.5rem;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(72, 187, 120, 0.4);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+            color: white;
+        }
+
+        .btn-warning:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(237, 137, 54, 0.4);
+        }
+
+        .textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            resize: vertical;
+            margin-bottom: 15px;
+            font-family: inherit;
+        }
+
+        .textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .file-input {
+            width: 100%;
+            padding: 10px;
+            border: 2px dashed #cbd5e0;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .file-input:hover {
+            border-color: #667eea;
+            background-color: #f7fafc;
+        }
+
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .status.success {
+            background-color: #f0fff4;
+            border: 1px solid #48bb78;
+            color: #22543d;
+        }
+
+        .status.error {
+            background-color: #fed7d7;
+            border: 1px solid #e53e3e;
+            color: #742a2a;
+        }
+
+        .quick-messages {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+
+        .message-btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .message-btn:hover {
+            background: #edf2f7;
+            border-color: #667eea;
+        }
+
+        .loader {
+            display: none;
+            margin: 10px auto;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .auth-info {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚡ BitVault Pro Bot Dashboard</h1>
+            <p>Control your Telegram bot with ease</p>
+        </div>
+
+        <div class="auth-info">
+            <strong>🔒 Secure Access:</strong> Only your User ID (7211220207) can control this bot
+        </div>
+
+        <div class="dashboard">
+            <!-- Quick Broadcast -->
+            <div class="card">
+                <h3><span class="emoji">📢</span> Quick Broadcast</h3>
+                <textarea id="broadcastMessage" class="textarea" placeholder="Type your message here..."></textarea>
+                <button class="btn btn-primary" onclick="sendBroadcast()">Send Message</button>
+                <div class="loader" id="broadcastLoader"></div>
+                <div class="status" id="broadcastStatus"></div>
+            </div>
+
+            <!-- Image Broadcast -->
+            <div class="card">
+                <h3><span class="emoji">🖼️</span> Image + Message</h3>
+                <div class="file-input" onclick="document.getElementById('imageFile').click()">
+                    <span id="fileLabel">📁 Click to select image</span>
+                    <input type="file" id="imageFile" accept="image/*" style="display: none;" onchange="updateFileLabel()">
+                </div>
+                <textarea id="imageMessage" class="textarea" placeholder="Message to send with image..."></textarea>
+                <button class="btn btn-success" onclick="sendImageBroadcast()">Send Image + Message</button>
+                <div class="loader" id="imageLoader"></div>
+                <div class="status" id="imageStatus"></div>
+            </div>
+
+            <!-- Daily Summary -->
+            <div class="card">
+                <h3><span class="emoji">📊</span> Daily Market Summary</h3>
+                <p style="margin-bottom: 15px; color: #666;">Send automated daily market update to your channel</p>
+                <button class="btn btn-warning" onclick="sendDailySummary()">Send Daily Summary</button>
+                <div class="loader" id="summaryLoader"></div>
+                <div class="status" id="summaryStatus"></div>
+            </div>
+
+            <!-- Bot Status -->
+            <div class="card">
+                <h3><span class="emoji">🤖</span> Bot Status</h3>
+                <button class="btn btn-primary" onclick="checkStatus()">Check Bot Status</button>
+                <div class="loader" id="statusLoader"></div>
+                <div class="status" id="statusInfo"></div>
+            </div>
+        </div>
+
+        <!-- Quick Message Templates -->
+        <div class="quick-messages">
+            <h3 style="margin-bottom: 20px; color: #4a5568;">⚡ Quick Message Templates</h3>
+            <button class="message-btn" onclick="loadTemplate('profit')">
+                💰 Profit Distribution Update
+            </button>
+            <button class="message-btn" onclick="loadTemplate('security')">
+                🔒 Security & Trust Update
+            </button>
+            <button class="message-btn" onclick="loadTemplate('opportunity')">
+                🚀 Investment Opportunity
+            </button>
+            <button class="message-btn" onclick="loadTemplate('growth')">
+                📈 Portfolio Growth Update
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const USER_ID = '7211220207';
+        const API_BASE = window.location.origin;
+
+        // Message templates
+        const templates = {
+            profit: `💰 BitVault Pro Profit Alert! 🚀
+
+✅ Daily profits have been distributed to all active investors
+📊 Your Bitcoin portfolio is growing automatically
+🔄 Compound interest is working in your favor
+
+💎 Your smart investment choice is paying off!`,
+
+            security: `🔒 BitVault Pro Security Update 🛡️
+
+✅ All funds secured in military-grade cold storage
+🔐 Advanced encryption protecting your investments
+🚨 24/7 monitoring systems operational
+💪 Bank-level security for your peace of mind
+
+Your Bitcoin is safer than ever! 💎`,
+
+            opportunity: `🚀 BitVault Pro Special Opportunity! ⚡
+
+📈 Bitcoin showing strong bullish momentum
+💰 Perfect time to maximize your returns
+🎯 Limited-time enhanced profit rates available
+⏰ Don't miss this market opportunity
+
+Smart investors act fast! 💎`,
+
+            growth: `📈 BitVault Pro Growth Report 🌟
+
+💰 Portfolio values exceeding expectations
+📊 Consistent daily returns being delivered
+🎯 Your investment strategy is working perfectly
+🚀 Join thousands of successful Bitcoin investors
+
+Your financial future is looking bright! ✨`
+        };
+
+        function loadTemplate(type) {
+            document.getElementById('broadcastMessage').value = templates[type];
+        }
+
+        function updateFileLabel() {
+            const fileInput = document.getElementById('imageFile');
+            const label = document.getElementById('fileLabel');
+            if (fileInput.files.length > 0) {
+                label.textContent = `📎 ${fileInput.files[0].name}`;
+            } else {
+                label.textContent = '📁 Click to select image';
+            }
+        }
+
+        async function makeRequest(endpoint, method = 'POST', body = null) {
+            const headers = {
+                'X-User-ID': USER_ID
+            };
+
+            const options = {
+                method,
+                headers
+            };
+
+            if (body && !(body instanceof FormData)) {
+                headers['Content-Type'] = 'application/json';
+                options.body = JSON.stringify(body);
+            } else if (body) {
+                options.body = body;
+            }
+
+            const response = await fetch(`${API_BASE}${endpoint}`, options);
+            return await response.json();
+        }
+
+        function showStatus(elementId, message, isError = false) {
+            const statusEl = document.getElementById(elementId);
+            statusEl.textContent = message;
+            statusEl.className = `status ${isError ? 'error' : 'success'}`;
+            statusEl.style.display = 'block';
+            
+            setTimeout(() => {
+                statusEl.style.display = 'none';
+            }, 5000);
+        }
+
+        function showLoader(loaderId, show = true) {
+            document.getElementById(loaderId).style.display = show ? 'block' : 'none';
+        }
+
+        async function sendBroadcast() {
+            const message = document.getElementById('broadcastMessage').value.trim();
+            if (!message) {
+                showStatus('broadcastStatus', 'Please enter a message', true);
+                return;
+            }
+
+            showLoader('broadcastLoader', true);
+            try {
+                const result = await makeRequest('/broadcast', 'POST', { message });
+                if (result.success) {
+                    showStatus('broadcastStatus', '✅ Message sent successfully!');
+                    document.getElementById('broadcastMessage').value = '';
+                } else {
+                    showStatus('broadcastStatus', `❌ Error: ${result.error}`, true);
+                }
+            } catch (error) {
+                showStatus('broadcastStatus', `❌ Network error: ${error.message}`, true);
+            }
+            showLoader('broadcastLoader', false);
+        }
+
+        async function sendImageBroadcast() {
+            const fileInput = document.getElementById('imageFile');
+            const message = document.getElementById('imageMessage').value.trim();
+
+            if (!fileInput.files.length && !message) {
+                showStatus('imageStatus', 'Please select an image or enter a message', true);
+                return;
+            }
+
+            showLoader('imageLoader', true);
+            try {
+                const formData = new FormData();
+                if (fileInput.files.length > 0) {
+                    formData.append('image', fileInput.files[0]);
+                }
+                if (message) {
+                    formData.append('message', message);
+                }
+
+                const result = await makeRequest('/custom-broadcast', 'POST', formData);
+                if (result.success) {
+                    showStatus('imageStatus', '✅ Image and message sent successfully!');
+                    document.getElementById('imageMessage').value = '';
+                    fileInput.value = '';
+                    updateFileLabel();
+                } else {
+                    showStatus('imageStatus', `❌ Error: ${result.error}`, true);
+                }
+            } catch (error) {
+                showStatus('imageStatus', `❌ Network error: ${error.message}`, true);
+            }
+            showLoader('imageLoader', false);
+        }
+
+        async function sendDailySummary() {
+            showLoader('summaryLoader', true);
+            try {
+                const result = await makeRequest('/daily-summary', 'POST');
+                if (result.success) {
+                    showStatus('summaryStatus', '✅ Daily summary sent successfully!');
+                } else {
+                    showStatus('summaryStatus', `❌ Error: ${result.error}`, true);
+                }
+            } catch (error) {
+                showStatus('summaryStatus', `❌ Network error: ${error.message}`, true);
+            }
+            showLoader('summaryLoader', false);
+        }
+
+        async function checkStatus() {
+            showLoader('statusLoader', true);
+            try {
+                const result = await makeRequest('/status', 'GET');
+                if (result.success) {
+                    const botStatus = result.data.bot;
+                    const serverStatus = result.data.server;
+                    const statusText = `🤖 Bot: ${botStatus.isConnected ? '✅ Connected' : '❌ Disconnected'}
+🖥️ Server: ${serverStatus.isRunning ? '✅ Running' : '❌ Stopped'}
+⏱️ Uptime: ${Math.floor(serverStatus.uptime / 60)} minutes`;
+                    showStatus('statusInfo', statusText);
+                } else {
+                    showStatus('statusInfo', `❌ Error: ${result.error}`, true);
+                }
+            } catch (error) {
+                showStatus('statusInfo', `❌ Network error: ${error.message}`, true);
+            }
+            showLoader('statusLoader', false);
+        }
+
+        // Auto-check status on page load
+        window.addEventListener('load', () => {
+            setTimeout(checkStatus, 1000);
+        });
+    </script>
+</body>
+</html>

@@ -18,6 +18,9 @@ class BitVaultBotServer {
      * Setup Express middleware
      */
     setupMiddleware() {
+        // Serve static files from public directory
+        this.app.use(express.static('public'));
+        
         // Body parsing middleware
         this.app.use(express.json({ limit: '10mb' }));
         this.app.use(express.urlencoded({ extended: true, limit: '10mb' }));
